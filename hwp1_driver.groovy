@@ -8,24 +8,24 @@ metadata
 {
     definition(name: "HomeWizard P1 Meter", namespace: "fan", author: "Fanman-76", importUrl: "https://github.com/Fanman76/Hubitat-HomeWizard_P1/blob/master/hwp1_driver.groovy")
     {
-        capability "Initialize"
-        capability "PowerMeter"
-        capability "Refresh"
-        
-        attribute "commStatus", "string"
-        attribute "smr_version", "string"
-        attribute "meter_model", "string"
-        attribute "wifi_ssid", "string"
-        attribute "wifi_strength", "string"
-        attribute "total_power_import_t1_kwh", "number"
-        attribute "total_power_import_t2_kwh", "number"
-        attribute "total_power_export_t1_kwh", "number"
-        attribute "total_power_export_t2_kwh", "number"
-	attribute "active_power_w", "number"
-	attribute "active_power_l1_w", "string"
-	attribute "active_power_l2_w", "string"
-	attribute "active_power_l3_w", "string"
-	attribute "total_gas_m3", "number"
+		capability "Initialize"
+		capability "PowerMeter"
+		capability "Refresh"
+
+		attribute "commStatus", "string"
+		attribute "smr_version", "string"
+		attribute "meter_model", "string"
+		attribute "wifi_ssid", "string"
+		attribute "wifi_strength", "string"
+		attribute "total_power_import_t1_kwh", "number"
+		attribute "total_power_import_t2_kwh", "number"
+		attribute "total_power_export_t1_kwh", "number"
+		attribute "total_power_export_t2_kwh", "number"
+		attribute "active_power_w", "number"
+		attribute "active_power_l1_w", "string"
+		attribute "active_power_l2_w", "string"
+		attribute "active_power_l3_w", "string"
+		attribute "total_gas_m3", "number"
     }
 }
 
