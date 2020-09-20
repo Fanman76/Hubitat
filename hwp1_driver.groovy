@@ -19,7 +19,8 @@ metadata
         attribute "wifi_strength", "string"
         attribute "total_power_import_t1_kwh", "number"
         attribute "total_power_import_t2_kwh", "number"
-        attribute "total_power_import_t3_kwh", "number"
+        attribute "total_power_export_t1_kwh", "number"
+        attribute "total_power_export_t2_kwh", "number"
 		attribute "active_power_w", "number"
 		attribute "active_power_l1_w", "string"
 		attribute "active_power_l2_w", "string"
@@ -88,7 +89,7 @@ def refresh()
         sendEvent(name: "total_power_import_t1_kwh", value: res?.total_power_import_t1_kwh.toInteger())
         sendEvent(name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger())
         sendEvent(name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger())
-        sendEvent(name: "total_power_export_t2_kwh", value: res?.total_power_export_t1_kwh.toInteger())
+        sendEvent(name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger())
         sendEvent(name: "active_power_w", value: res?.active_power_w?.toInteger())
         sendEvent(name: "active_power_l1_w", value: res?.active_power_l1_w.toString())
         sendEvent(name: "active_power_l2_w", value: res?.active_power_l2_w.toString())
