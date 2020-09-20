@@ -21,12 +21,11 @@ metadata
         attribute "total_power_import_t2_kwh", "number"
         attribute "total_power_export_t1_kwh", "number"
         attribute "total_power_export_t2_kwh", "number"
-		attribute "active_power_w", "number"
-		attribute "active_power_l1_w", "string"
-		attribute "active_power_l2_w", "string"
-		attribute "active_power_l3_w", "string"
-		attribute "total_gas_m3", "number"
-		attribute "gas_timestamp", "string"
+	attribute "active_power_w", "number"
+	attribute "active_power_l1_w", "string"
+	attribute "active_power_l2_w", "string"
+	attribute "active_power_l3_w", "string"
+	attribute "total_gas_m3", "number"
     }
 }
 
@@ -70,7 +69,6 @@ def initialize()
     sendEvent(name: "active_power_l2_w", value: "unknown")
     sendEvent(name: "active_power_l3_w", value: "unknown")
     sendEvent(name: "total_gas_m3", value: "unknown")
-    sendEvent(name: "gas_timestamp", value: "unknown")
     refresh()
 }
 
@@ -95,7 +93,6 @@ def refresh()
         sendEvent(name: "active_power_l2_w", value: res?.active_power_l2_w.toString())
         sendEvent(name: "active_power_l3_w", value: res?.active_power_l3_w.toString())
         sendEvent(name: "total_gas_m3", value: res?.total_gas_m3.toInteger())
-        sendEvent(name: "gas_timestamp", value: res?.gas_timestamp.toString())
         
         // schedule next refresh
         runIn(refreshInterval.toInteger(), refresh)
