@@ -26,7 +26,7 @@ metadata
 		attribute "active_power_l2_w", "string"
 		attribute "active_power_l3_w", "string"
 		attribute "total_gas_m3", "number"
-		attribute "gas_timestamp", "date"
+		attribute "gas_timestamp", "string"
     }
 }
 
@@ -95,7 +95,7 @@ def refresh()
         sendEvent(name: "active_power_l2_w", value: res?.active_power_l2_w.toString())
         sendEvent(name: "active_power_l3_w", value: res?.active_power_l3_w.toString())
         sendEvent(name: "total_gas_m3", value: res?.total_gas_m3.toInteger())
-        sendEvent(name: "gas_timestamp", value: res?.gas_timestamp.toInteger())
+        sendEvent(name: "gas_timestamp", value: res?.gas_timestamp.toString())
         
         // schedule next refresh
         runIn(refreshInterval.toInteger(), refresh)
