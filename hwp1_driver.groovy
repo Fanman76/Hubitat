@@ -6,25 +6,25 @@
 
 metadata
 {
-    definition(name: "HomeWizard P1 Meter", namespace: "fan", author: "Fanman-76", importUrl: "https://github.com/Fanman76/Hubitat-HomeWizard_P1/blob/master/hwp1_driver.groovy")
+    definition(name: "HomeWizard P1 Meter", namespace: "Fan", author: "Fanman-76", importUrl: "https://github.com/Fanman76/Hubitat-HomeWizard_P1/blob/master/hwp1_driver.groovy")
     {
-		capability "Initialize"
-		capability "PowerMeter"
-		capability "Refresh"
-
-		attribute "commStatus", "string"
-		attribute "smr_version", "string"
-		attribute "meter_model", "string"
-		attribute "wifi_ssid", "string"
-		attribute "wifi_strength", "string"
-		attribute "total_power_import_t1_kwh", "number"
-		attribute "total_power_import_t2_kwh", "number"
-		attribute "total_power_export_t1_kwh", "number"
-		attribute "total_power_export_t2_kwh", "number"
+        capability "Initialize"
+        capability "PowerMeter"
+        capability "Refresh"
+        
+        attribute "commStatus", "string"
+        attribute "smr_version", "string"
+        attribute "meter_model", "string"
+        attribute "wifi_ssid", "string"
+        attribute "wifi_strength", "number"
+        attribute "total_power_import_t1_kwh", "number"
+        attribute "total_power_import_t2_kwh", "number"
+        attribute "total_power_export_t1_kwh", "number"
+        attribute "total_power_export_t2_kwh", "number"
 		attribute "active_power_w", "number"
-		attribute "active_power_l1_w", "string"
-		attribute "active_power_l2_w", "string"
-		attribute "active_power_l3_w", "string"
+		attribute "active_power_l1_w", "number"
+		attribute "active_power_l2_w", "number"
+		attribute "active_power_l3_w", "number"
 		attribute "total_gas_m3", "number"
     }
 }
@@ -35,7 +35,8 @@ preferences
     {
         input "ipAddress", "text", title: "IP address meter", required: true
         input "refreshInterval", "number", title: "Refresh interval (seconds)", defaultValue: 10
-        input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: true
+        input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
+        input name: "threephase", type: "bool", title: "Enable 3 phase logging", defaultValue: false
     }
 }
 
@@ -66,9 +67,15 @@ def initialize()
     sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
     sendEvent(name: "active_power_w", value: "unknown")
     sendEvent(name: "active_power_l1_w", value: "unknown")
-    sendEvent(name: "active_power_l2_w", value: "unknown")
-    sendEvent(name: "active_power_l3_w", value: "unknown")
     sendEvent(name: "total_gas_m3", value: "unknown")
+    if (threephase) {
+            sendEvent(name: "active_power_l2_w", value: "unknown")
+            sendEvent(name: "active_power_l3_w", value: "unknown")
+        }
+    else {
+            sendEvent(name: "active_power_l2_w", value: "0")
+            sendEvent(name: "active_power_l3_w", value: "0")    
+        }
     refresh()
 }
 
@@ -80,20 +87,23 @@ def refresh()
     {
         def res = httpGetExec([uri: getBaseURI()], true)
         sendEvent(name: "commStatus", value: "good")
-        sendEvent(name: "smr_version", value: res?.smr_version.toInteger())
+        sendEvent(name: "smr_version", value: res?.smr_version.toString())
         sendEvent(name: "meter_model", value: res?.meter_model.toString())
         sendEvent(name: "wifi_ssid", value: res?.wifi_ssid.toString())
-        sendEvent(name: "wifi_strength", value: res?.wifi_strength.toInteger())
-        sendEvent(name: "total_power_import_t1_kwh", value: res?.total_power_import_t1_kwh.toInteger())
-        sendEvent(name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger())
-        sendEvent(name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger())
-        sendEvent(name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger())
-        sendEvent(name: "active_power_w", value: res?.active_power_w?.toInteger())
-        sendEvent(name: "active_power_l1_w", value: res?.active_power_l1_w.toString())
-        sendEvent(name: "active_power_l2_w", value: res?.active_power_l2_w.toString())
-        sendEvent(name: "active_power_l3_w", value: res?.active_power_l3_w.toString())
-        sendEvent(name: "total_gas_m3", value: res?.total_gas_m3.toInteger())
-        
+        sendEvent([name: "wifi_strength", value: res?.wifi_strength.toInteger(), unit: "%"])
+        sendEvent([name: "total_power_import_t1_kwh", value: res?.total_power_import_t1_kwh.toInteger(), unit: "kWh"])
+        sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
+        sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
+        sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
+        sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
+        sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
+        sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
+    if (threephase)
+        {
+            sendEvent([name: "active_power_l2_w", value: res?.active_power_l2_w.toInteger(), unit: "W"])
+            sendEvent([name: "active_power_l3_w", value: res?.active_power_l3_w.toInteger(), unit: "W"])
+        }
+
         // schedule next refresh
         runIn(refreshInterval.toInteger(), refresh)
     }
@@ -121,7 +131,7 @@ def httpGetExec(params, throwToCaller = false)
         { resp ->
             if (resp.data)
             {
-                logDebug("resp.data = ${resp.data}")
+//                logDebug("resp.data = ${resp.data}")
                 result = resp.data
             }
         }
