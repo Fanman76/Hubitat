@@ -76,13 +76,13 @@ def initialize()
             sendEvent(name: "active_power_l2_w", value: "0")
             sendEvent(name: "active_power_l3_w", value: "0")    
         }
+    unschedule()
     refresh()
 }
 
 def refresh()
 {
-    unschedule()
-    
+
     try
     {
         def res = httpGetExec([uri: getBaseURI()], true)
