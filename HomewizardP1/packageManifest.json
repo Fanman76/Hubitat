@@ -10,7 +10,7 @@
       "name": "HomeWizard P1 Meter",
       "namespace": "Fan",
       "location": "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/hwp1_driver.groovy",
-      "required": true
+      "required": true,
       "version": "0.0.3"
     }
   ]
