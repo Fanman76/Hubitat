@@ -34,9 +34,9 @@ preferences
     section
     {
         input "ipAddress", "text", title: "IP address meter", required: true
-        input "refreshInterval", "number", title: "Refresh interval (seconds)", defaultValue: 10
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
         input name: "threephase", type: "bool", title: "Enable 3 phase logging", defaultValue: false
+        input ( name: 'pollInterval', type: 'enum', title: 'Update interval (in minutes)', options: ['1', '5', '10', '15', '30', '60', '180'], required: true, defaultValue: '60' )
     }
 }
 
@@ -98,14 +98,49 @@ def refresh()
         sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
         sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
         sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
+        
+        unschedule()
+        
     if (threephase)
         {
             sendEvent([name: "active_power_l2_w", value: res?.active_power_l2_w.toInteger(), unit: "W"])
             sendEvent([name: "active_power_l3_w", value: res?.active_power_l3_w.toInteger(), unit: "W"])
         }
-
-        // schedule next refresh
-        runIn(refreshInterval.toInteger(), refresh)
+        
+    if (enablePoll) {
+	
+		Integer interval = Integer.parseInt(settings.pollInterval)
+		
+		switch (interval) {
+			case 1: 
+				runEvery1Minute(getBaseURI)
+				break
+			case 5:
+				runEvery5Minutes(getBaseURI)
+				break
+			case 10:
+				runEvery10Minutes(getBaseURI)
+				break
+			case 15:
+				runEvery15Minutes(getBaseURI)
+				break
+			case 30:
+				runEvery30Minutes(getBaseURI)
+				break
+			case 60:
+				runEvery1Hour(getBaseURI)
+				break
+			case 180:
+				runEvery3Hours(getBaseURI)
+				break
+			default:
+				runIn(interval*60,getBaseURI)
+				break
+		}
+		
+	    logDebug("Scheduled to run ${interval} minutes") 
+		runIn(2, getBaseURI) //  Run after updates in addition to the scheduled poll
+	}
     }
     catch (Exception e)
     {
