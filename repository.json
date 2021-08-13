@@ -1,4 +1,14 @@
 {
   "author": "Fanman-76",
   "gitHubUrl": "https://github.com/Fanman76/"
+,
+	"packages": [
+		{
+			"name": "HomeWizard P1",
+			"category": "Power",
+			"location": "https://raw.githubusercontent.com/package1/packageManifest.json",
+			"description": "HomeWizard P1 driver for Hubitat"
+		}
+	]
+	
 }
