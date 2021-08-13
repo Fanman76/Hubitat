@@ -99,7 +99,6 @@ def refresh()
         sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
         sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
         
-        unschedule()
         
     if (threephase)
         {
@@ -113,28 +112,28 @@ def refresh()
 		
 		switch (interval) {
 			case 1: 
-				runEvery1Minute(getBaseURI)
+				runEvery1Minute(refresh)
 				break
 			case 5:
-				runEvery5Minutes(getBaseURI)
+				runEvery5Minutes(refresh)
 				break
 			case 10:
-				runEvery10Minutes(getBaseURI)
+				runEvery10Minutes(refresh)
 				break
 			case 15:
-				runEvery15Minutes(getBaseURI)
+				runEvery15Minutes(refresh)
 				break
 			case 30:
-				runEvery30Minutes(getBaseURI)
+				runEvery30Minutes(refresh)
 				break
 			case 60:
-				runEvery1Hour(getBaseURI)
+				runEvery1Hour(refresh)
 				break
 			case 180:
-				runEvery3Hours(getBaseURI)
+				runEvery3Hours(refresh)
 				break
 			default:
-				runIn(interval*60,getBaseURI)
+				runIn(interval*60,refresh)
 				break
 		}
 		
