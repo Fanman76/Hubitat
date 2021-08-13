@@ -6,7 +6,7 @@
 
 metadata
 {
-    definition(name: "HomeWizard P1 Meter", namespace: "Fan", author: "Fanman-76", importUrl: "https://github.com/Fanman76/Hubitat-HomeWizard_P1/blob/master/hwp1_driver.groovy")
+    definition(name: "HomeWizard P1 Meter", namespace: "Fan", author: "Fanman-76", importUrl: "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/hwp1_driver.groovy")
     {
         capability "Initialize"
         capability "PowerMeter"
