@@ -2,7 +2,7 @@
   "packageName": "HomeWizard P1 Meter",
   "author": "Fanman-76",
   "version": "1.0",
-  "minimumHEVersion": "2.1.9",
+  "minimumHEVersion": "0.0",
   "dateReleased": "2021-08-13",
   "drivers": [
     {
@@ -11,6 +11,7 @@
       "namespace": "Fan",
       "location": "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/hwp1_driver.groovy",
       "required": true
+      "version": "0.0.3"
     }
   ]
 }
