@@ -6,7 +6,7 @@
 		{
 			"name": "HomeWizard P1",
 			"category": "Power",
-			"location": "https://raw.githubusercontent.com/package1/packageManifest.json",
+			"location": "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/packageManifest.json",
 			"description": "HomeWizard P1 driver for Hubitat"
 		}
 	]
