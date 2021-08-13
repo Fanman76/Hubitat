@@ -113,28 +113,28 @@ def refresh()
 		
 		switch (interval) {
 			case 1: 
-				runEvery1Minute(getBaseURI)
+				runEvery1Minute(refresh)
 				break
 			case 5:
-				runEvery5Minutes(getBaseURI)
+				runEvery5Minutes(refresh)
 				break
 			case 10:
-				runEvery10Minutes(getBaseURI)
+				runEvery10Minutes(refresh)
 				break
 			case 15:
-				runEvery15Minutes(getBaseURI)
+				runEvery15Minutes(refresh)
 				break
 			case 30:
-				runEvery30Minutes(getBaseURI)
+				runEvery30Minutes(refresh)
 				break
 			case 60:
-				runEvery1Hour(getBaseURI)
+				runEvery1Hour(refresh)
 				break
 			case 180:
-				runEvery3Hours(getBaseURI)
+				runEvery3Hours(refresh)
 				break
 			default:
-				runIn(interval*60,getBaseURI)
+				runIn(interval*60,refresh)
 				break
 		}
 		
