@@ -6,7 +6,7 @@
 
 metadata
 {
-    definition(name: "HomeWizard P1 Meter", namespace: "Fan", author: "Fanman-76", importUrl: "https://github.com/Fanman76/Hubitat-HomeWizard_P1/blob/master/hwp1_driver.groovy")
+    definition(name: "HomeWizard P1 Meter", namespace: "Fan", author: "Fanman-76", importUrl: "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/hwp1_driver.groovy")
     {
         capability "Initialize"
         capability "PowerMeter"
@@ -21,11 +21,11 @@ metadata
         attribute "total_power_import_t2_kwh", "number"
         attribute "total_power_export_t1_kwh", "number"
         attribute "total_power_export_t2_kwh", "number"
-		attribute "active_power_w", "number"
-		attribute "active_power_l1_w", "number"
-		attribute "active_power_l2_w", "number"
-		attribute "active_power_l3_w", "number"
-		attribute "total_gas_m3", "number"
+	attribute "active_power_w", "number"
+	attribute "active_power_l1_w", "number"
+	attribute "active_power_l2_w", "number"
+	attribute "active_power_l3_w", "number"
+	attribute "total_gas_m3", "number"
     }
 }
 
@@ -37,6 +37,7 @@ preferences
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
         input name: "threephase", type: "bool", title: "Enable 3 phase logging", defaultValue: false
         input ( name: 'pollInterval', type: 'enum', title: 'Update interval (in minutes)', options: ['1', '5', '10', '15', '30', '60', '180'], required: true, defaultValue: '60' )
+	input name: "enablePull", type: "bool", title: "Enable device polling", defaultValue: false
     }
 }
 
