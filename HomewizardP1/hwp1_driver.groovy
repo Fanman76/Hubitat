@@ -37,7 +37,7 @@ preferences
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
         input name: "threephase", type: "bool", title: "Enable 3 phase logging", defaultValue: false
         input ( name: 'pollInterval', type: 'enum', title: 'Update interval (in minutes)', options: ['1', '5', '10', '15', '30', '60', '180'], required: true, defaultValue: '60' )
-	input name: "enablePull", type: "bool", title: "Enable device polling", defaultValue: false
+	input name: "enablePoll", type: "bool", title: "Enable device polling", defaultValue: false
     }
 }
 
