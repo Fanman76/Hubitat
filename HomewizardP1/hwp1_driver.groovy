@@ -36,6 +36,7 @@ preferences
         input "ipAddress", "text", title: "IP address meter", required: true
         input name: "logEnable", type: "bool", title: "Enable debug logging", defaultValue: false
         input name: "threephase", type: "bool", title: "Enable 3 phase logging", defaultValue: false
+		input name: "gas", type: "bool", title: "Enable gas usage logging", defaultValue: true
         input ( name: 'pollInterval', type: 'enum', title: 'Update interval (in minutes)', options: ['1', '5', '10', '15', '30', '60', '180'], required: true, defaultValue: '60' )
 	input name: "enablePoll", type: "bool", title: "Enable device polling", defaultValue: false
     }
@@ -69,6 +70,14 @@ def initialize()
     sendEvent(name: "active_power_w", value: "unknown")
     sendEvent(name: "active_power_l1_w", value: "unknown")
     sendEvent(name: "total_gas_m3", value: "unknown")
+
+    if (gas) {
+            sendEvent(name: "total_gas_m3", value: "unknown")
+        }
+    else {
+            sendEvent(name: "total_gas_m3", value: "0")    
+        }
+	
     if (threephase) {
             sendEvent(name: "active_power_l2_w", value: "unknown")
             sendEvent(name: "active_power_l3_w", value: "unknown")
@@ -96,16 +105,19 @@ def refresh()
         sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
-        sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
         sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
-        sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
         
-        
+     if (gas)
+        {
+            sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
+        }
+		
     if (threephase)
         {
             sendEvent([name: "active_power_l2_w", value: res?.active_power_l2_w.toInteger(), unit: "W"])
             sendEvent([name: "active_power_l3_w", value: res?.active_power_l3_w.toInteger(), unit: "W"])
         }
+
         
     if (enablePoll) {
 	
