@@ -1,7 +1,5 @@
 /*
     Hubitat driver for the HomeWizard P1 energy meter.
-    Special thanks to TOMW for making this possible!
-
  */
 
 metadata
@@ -21,11 +19,10 @@ metadata
         attribute "total_power_import_t2_kwh", "number"
         attribute "total_power_export_t1_kwh", "number"
         attribute "total_power_export_t2_kwh", "number"
-	attribute "active_power_w", "number"
-	attribute "active_power_l1_w", "number"
-	attribute "active_power_l2_w", "number"
-	attribute "active_power_l3_w", "number"
-	attribute "total_gas_m3", "number"
+	    attribute "active_power_l1_w", "number"
+	    attribute "active_power_l2_w", "number"
+	    attribute "active_power_l3_w", "number"
+	    attribute "total_gas_m3", "number"
     }
 }
 
@@ -67,7 +64,6 @@ def initialize()
     sendEvent(name: "total_power_import_t2_kwh", value: "unknown")
     sendEvent(name: "total_power_export_t1_kwh", value: "unknown")
     sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
-    sendEvent(name: "active_power_w", value: "unknown")
     sendEvent(name: "active_power_l1_w", value: "unknown")
     sendEvent(name: "total_gas_m3", value: "unknown")
 
@@ -105,8 +101,13 @@ def refresh()
         sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
-        sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
         
+     if (res) { 
+       if (res.active_power_l1_w != "NULL") {
+         sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
+      }
+    }  
+
      if (gas)
         {
             sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
