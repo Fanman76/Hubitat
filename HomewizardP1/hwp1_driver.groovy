@@ -65,6 +65,7 @@ def initialize()
     sendEvent(name: "total_power_export_t1_kwh", value: "unknown")
     sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
     sendEvent(name: "active_power_l1_w", value: "unknown")
+    sendEvent(name: "active_power_w", value: "unknown")
     sendEvent(name: "total_gas_m3", value: "unknown")
 
     if (gas) {
@@ -101,6 +102,7 @@ def refresh()
         sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
+	sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
         
      if (res) { 
        if (res.active_power_l1_w != "NULL") {
