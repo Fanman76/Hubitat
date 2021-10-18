@@ -19,11 +19,11 @@ metadata
         attribute "total_power_import_t2_kwh", "number"
         attribute "total_power_export_t1_kwh", "number"
         attribute "total_power_export_t2_kwh", "number"
-	attribute "active_power_l1_w", "number"
-	attribute "active_power_l2_w", "number"
-	attribute "active_power_l3_w", "number"
-	attribute "active_power_w", "number"
-	attribute "total_gas_m3", "number"
+        attribute "active_power_l1_w", "number"
+        attribute "active_power_l2_w", "number"
+        attribute "active_power_l3_w", "number"
+        attribute "active_power_w", "number"
+        attribute "total_gas_m3", "number"
     }
 }
 
@@ -61,16 +61,16 @@ def initialize()
     sendEvent(name: "meter_model", value: "unknown")
     sendEvent(name: "wifi_ssid", value: "unknown")
     sendEvent(name: "wifi_strength", value: "unknown")
-    sendEvent(name: "total_power_import_t1_kwh", value: "unknown")
-    sendEvent(name: "total_power_import_t2_kwh", value: "unknown")
-    sendEvent(name: "total_power_export_t1_kwh", value: "unknown")
-    sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
-    sendEvent(name: "active_power_l1_w", value: "unknown")
-    sendEvent(name: "active_power_w", value: "unknown")
-    sendEvent(name: "total_gas_m3", value: "unknown")
+    sendEvent(name: "total_power_import_t1_kwh", value: "0")
+    sendEvent(name: "total_power_import_t2_kwh", value: "0")
+    sendEvent(name: "total_power_export_t1_kwh", value: "0")
+    sendEvent(name: "total_power_export_t2_kwh", value: "0")
+    sendEvent(name: "active_power_l1_w", value: "0")
+    sendEvent(name: "active_power_w", value: "0")
+    sendEvent(name: "total_gas_m3", value: "0")
 
     if (gas) {
-            sendEvent(name: "total_gas_m3", value: "unknown")
+            sendEvent(name: "total_gas_m3", value: "0")
         }
     else {
             sendEvent(name: "total_gas_m3", value: "0")    
@@ -99,18 +99,15 @@ def refresh()
         sendEvent(name: "meter_model", value: res?.meter_model.toString())
         sendEvent(name: "wifi_ssid", value: res?.wifi_ssid.toString())
         sendEvent([name: "wifi_strength", value: res?.wifi_strength.toInteger(), unit: "%"])
-        sendEvent([name: "total_power_import_t1_kwh", value: res?.total_power_import_t1_kwh.toInteger(), unit: "kWh"])
-        sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
-        sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
-        sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
-	sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
+         
+       if (res.active_power_l1_w != "NULL") {sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])}
+       if (res.total_power_import_t1_kwh != "NULL") {sendEvent([name: "total_power_import_t1_kwh", value: res?.total_power_import_t1_kwh.toInteger(), unit: "kWh"])}
+       if (res.total_power_import_t2_kwh != "NULL") {sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])}
+       if (res.total_power_export_t1_kwh != "NULL") {sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])}
+       if (res.total_power_export_t2_kwh != "NULL") {sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])}
+       if (res.active_power_w != "NULL") {sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
+     }
         
-     if (res) { 
-       if (res.active_power_l1_w != "NULL") {
-         sendEvent([name: "active_power_l1_w", value: res?.active_power_l1_w.toInteger(), unit: "W"])
-      }
-    }  
-
      if (gas)
         {
             sendEvent([name: "total_gas_m3", value: res?.total_gas_m3.toInteger(), unit: "m3"])
