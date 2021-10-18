@@ -19,10 +19,11 @@ metadata
         attribute "total_power_import_t2_kwh", "number"
         attribute "total_power_export_t1_kwh", "number"
         attribute "total_power_export_t2_kwh", "number"
-	    attribute "active_power_l1_w", "number"
-	    attribute "active_power_l2_w", "number"
-	    attribute "active_power_l3_w", "number"
-	    attribute "total_gas_m3", "number"
+	attribute "active_power_l1_w", "number"
+	attribute "active_power_l2_w", "number"
+	attribute "active_power_l3_w", "number"
+	attribute "active_power_w", "number"
+	attribute "total_gas_m3", "number"
     }
 }
 
