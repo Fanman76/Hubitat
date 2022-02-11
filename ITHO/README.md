@@ -1,1 +1,1 @@
-Driver for an ITHO box
+Hubitat driver for the ITHO module made by Arjen Hiemstra (https://github.com/arjenhiemstra/ithowifi)
