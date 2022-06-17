@@ -104,6 +104,7 @@ def refresh()
         sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
 	sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
+	sendEvent([name: "power", value: res?.active_power_w.toInteger(), unit: "W"])
         
      if (res) { 
        if (res.active_power_l1_w != "NULL") {
