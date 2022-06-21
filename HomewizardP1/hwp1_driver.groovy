@@ -22,7 +22,7 @@ metadata
         attribute "active_power_l1_w", "number"
         attribute "active_power_l2_w", "number"
         attribute "active_power_l3_w", "number"
-        attribute "active_power_w", "number"
+        attribute "power", "number"
         attribute "total_gas_m3", "number"
     }
 }
@@ -66,7 +66,7 @@ def initialize()
     sendEvent(name: "total_power_export_t1_kwh", value: "unknown")
     sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
     sendEvent(name: "active_power_l1_w", value: "unknown")
-    sendEvent(name: "active_power_w", value: "unknown")
+    sendEvent(name: "power", value: "unknown")
     sendEvent(name: "total_gas_m3", value: "unknown")
 
     if (gas) {
@@ -103,7 +103,7 @@ def refresh()
         sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
-	sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
+	    sendEvent([name: "power", value: res?.active_power_w.toInteger(), unit: "W"])
         
      if (res) { 
        if (res.active_power_l1_w != "NULL") {
