@@ -2,15 +2,17 @@
   "packageName": "HomeWizard P1 Meter",
   "author": "Fanman-76",
   "version": "1.0",
-  "minimumHEVersion": "0.0",
+  "minimumHEVersion": "2.1.9",
+  "communityLink": "https://community.hubitat.com/t/release-homewizard-energy-driver-p1-socket-driver/51101"
   "dateReleased": "2021-08-13",
+  "releaseNotes": "First public release",
   "drivers": [
     {
       "id": "59b0ed46-691e-4cb1-8243-931db740c8cb",
       "name": "HomeWizard P1 Meter",
       "namespace": "Fan",
       "location": "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/hwp1_driver.groovy",
-      "required": true,
+      "required": false,
       "version": "0.0.3"
     }
   ]
