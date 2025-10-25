@@ -36,7 +36,8 @@ preferences
         input name: "threephase", type: "bool", title: "Enable 3 phase logging", defaultValue: false
 		input name: "gas", type: "bool", title: "Enable gas usage logging", defaultValue: true
         input ( name: 'pollInterval', type: 'enum', title: 'Update interval (in minutes)', options: ['1', '5', '10', '15', '30', '60', '180'], required: true, defaultValue: '60' )
-	input name: "enablePoll", type: "bool", title: "Enable device polling", defaultValue: false
+		input name: "enablePoll", type: "bool", title: "Enable device polling", defaultValue: false
+		input name: "Unknown", type: "bool", title: "Enable unknown value if no data is recived yet", defaultValue: true
     }
 }
 
@@ -55,20 +56,22 @@ def updated()
 
 def initialize()
 {
-    sendEvent(name: "commStatus", value: "unknown")
-    sendEvent(name: "wifi_strength", value: "unknown")
-    sendEvent(name: "smr_version", value: "unknown")
-    sendEvent(name: "meter_model", value: "unknown")
-    sendEvent(name: "wifi_ssid", value: "unknown")
-    sendEvent(name: "wifi_strength", value: "unknown")
-    sendEvent(name: "total_power_import_t1_kwh", value: "unknown")
-    sendEvent(name: "total_power_import_t2_kwh", value: "unknown")
-    sendEvent(name: "total_power_export_t1_kwh", value: "unknown")
-    sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
-    sendEvent(name: "active_power_l1_w", value: "unknown")
-    sendEvent(name: "power", value: "unknown")
-    sendEvent(name: "total_gas_m3", value: "unknown")
-
+	if (unknwon) {
+		sendEvent(name: "commStatus", value: "unknown")
+		sendEvent(name: "wifi_strength", value: "unknown")
+		sendEvent(name: "smr_version", value: "unknown")
+		sendEvent(name: "meter_model", value: "unknown")
+		sendEvent(name: "wifi_ssid", value: "unknown")
+		sendEvent(name: "wifi_strength", value: "unknown")
+		sendEvent(name: "total_power_import_t1_kwh", value: "unknown")
+		sendEvent(name: "total_power_import_t2_kwh", value: "unknown")
+		sendEvent(name: "total_power_export_t1_kwh", value: "unknown")
+		sendEvent(name: "total_power_export_t2_kwh", value: "unknown")
+		sendEvent(name: "active_power_l1_w", value: "unknown")
+		sendEvent(name: "power", value: "unknown")
+		sendEvent(name: "total_gas_m3", value: "unknown")
+		}
+	
     if (gas) {
             sendEvent(name: "total_gas_m3", value: "unknown")
         }
@@ -103,6 +106,7 @@ def refresh()
         sendEvent([name: "total_power_import_t2_kwh", value: res?.total_power_import_t2_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t1_kwh", value: res?.total_power_export_t1_kwh.toInteger(), unit: "kWh"])
         sendEvent([name: "total_power_export_t2_kwh", value: res?.total_power_export_t2_kwh.toInteger(), unit: "kWh"])
+//	    sendEvent([name: "active_power_w", value: res?.active_power_w.toInteger(), unit: "W"])
 	    sendEvent([name: "power", value: res?.active_power_w.toInteger(), unit: "W"])
         
      if (res) { 
