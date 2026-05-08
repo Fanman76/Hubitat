@@ -2,44 +2,23 @@
     Hubitat driver for the HomeWizard P1 energy meter.
     Uses HomeWizard Local API v2 (HTTPS + Bearer token).
 
-    ── REQUIREMENTS ────────────────────────────────────────────────────────────
+    REQUIREMENTS:
     API v2 requires P1 Meter firmware 6.x or higher.
-    Check / update via the HomeWizard Energy app → Settings → Meters → Your meter.
-    If the device still runs firmware 5.x it only supports API v1 (HTTP, no auth).
+    Check / update via the HomeWizard Energy app > Settings > Meters > Your meter.
 
-    ── WHY "Connection refused on port 443"? ───────────────────────────────────
-    The P1 Meter HTTPS server listens on port 443.
-    "Connection refused" almost always means one of:
-      a) Firmware < 6.x  →  v2 HTTPS server is not running yet.  Update firmware.
-      b) Wrong IP address in preferences.
-      c) Hubitat's JVM TLS stack refusing the device's self-signed certificate
-         before the TCP connection is even negotiated.
-    This driver sets ignoreSSLIssues:true AND explicitly overrides the
-    SSLContext via a custom TrustManager so that Hubitat's strict JVM trust
-    store does not block the connection.
-
-    ── TOKEN SETUP ─────────────────────────────────────────────────────────────
+    TOKEN SETUP:
       1. Enter IP address and a token name in preferences.
       2. Click "Request Token" command.
-         - Device replies "press button" (403) until the physical button is pressed.
+         - Device replies "press-button" (403) until the physical button is pressed.
       3. Press the button on the P1 Meter (within 30 s), then click "Request Token" again.
-      4. Token is saved automatically; polling can now proceed.
-
-    ── API v2 vs v1 FIELD CHANGES ──────────────────────────────────────────────
-      Endpoint           : https://<ip>/api/measurement   (was http://<ip>/api/v1/data)
-      Auth               : Authorization: Bearer <token>  (was none)
-      active_power_w     → power_w
-      total_power_import_t1_kwh → energy_import_t1_kwh   (etc.)
-      total_gas_m3       → external[].value where type=="gas_meter"
-      New fields         : voltage, current, frequency, power-fail counters,
-                           15-min average demand, monthly peak, water meter
+      4. Token is saved automatically in device state; polling can now proceed.
 */
 
 metadata {
     definition(
         name:      "HomeWizard P1 Meter (API v2)",
         namespace: "Fan",
-        author:    "Fanman",
+        author:    "Fanman76",
         importUrl: "https://raw.githubusercontent.com/Fanman76/Hubitat/master/HomewizardP1/hwp1_driver.groovy"
     ) {
         capability "Initialize"
@@ -69,8 +48,8 @@ metadata {
         attribute "energy_export_t1_kwh",  "number"
         attribute "energy_export_t2_kwh",  "number"
 
-        // Active power (W)  — "power" fulfils the PowerMeter capability
-        attribute "power",                 "number"   // = power_w (total)
+        // Active power (W) — "power" fulfils the PowerMeter capability
+        attribute "power",                 "number"
         attribute "power_l1_w",            "number"
         attribute "power_l2_w",            "number"
         attribute "power_l3_w",            "number"
@@ -90,55 +69,76 @@ metadata {
         attribute "frequency_hz",          "number"
 
         // Power quality
-        attribute "voltage_sag_l1_count",  "number"
-        attribute "voltage_sag_l2_count",  "number"
-        attribute "voltage_sag_l3_count",  "number"
-        attribute "voltage_swell_l1_count","number"
-        attribute "voltage_swell_l2_count","number"
-        attribute "voltage_swell_l3_count","number"
-        attribute "any_power_fail_count",  "number"
-        attribute "long_power_fail_count", "number"
+        attribute "voltage_sag_l1_count",   "number"
+        attribute "voltage_sag_l2_count",   "number"
+        attribute "voltage_sag_l3_count",   "number"
+        attribute "voltage_swell_l1_count", "number"
+        attribute "voltage_swell_l2_count", "number"
+        attribute "voltage_swell_l3_count", "number"
+        attribute "any_power_fail_count",   "number"
+        attribute "long_power_fail_count",  "number"
 
         // Belgian capacity-rate fields
-        attribute "average_power_15m_w",          "number"
-        attribute "monthly_power_peak_w",          "number"
-        attribute "monthly_power_peak_timestamp",  "string"
+        attribute "average_power_15m_w",         "number"
+        attribute "monthly_power_peak_w",         "number"
+        attribute "monthly_power_peak_timestamp", "string"
 
-        // External utility meters (gas / water)
-        attribute "gas_m3",               "number"
-        attribute "gas_timestamp",        "string"
-        attribute "water_m3",             "number"
-        attribute "water_timestamp",      "string"
+        // External utility meters
+        attribute "gas_m3",          "number"
+        attribute "gas_timestamp",   "string"
+        attribute "water_m3",        "number"
+        attribute "water_timestamp", "string"
     }
 }
 
 preferences {
-    section {
-        input "ipAddress",     "text",   title: "IP address of P1 Meter",  required: true
-        input "bearerToken",   "text",   title: "API v2 Bearer Token (obtain via 'Request Token' command)", required: false
-        input "tokenName",     "text",   title: "Token name (used when requesting a token)", defaultValue: "local/hubitat"
-        input name: "logEnable",   type: "bool", title: "Enable debug logging",   defaultValue: false
-        input name: "threephase",  type: "bool", title: "Enable 3-phase attributes", defaultValue: false
-        input name: "gas",         type: "bool", title: "Track gas usage",            defaultValue: true
-        input name: "water",       type: "bool", title: "Track water usage",           defaultValue: false
-        input name: "belgianRate", type: "bool", title: "Track Belgian capacity-rate (15-min peak)", defaultValue: false
-        input name: "pollInterval", type: "enum", title: "Poll interval",
-              options: ["1","5","10","15","30","60","180"], required: true, defaultValue: "60"
-        input name: "enablePoll",  type: "bool", title: "Enable scheduled polling", defaultValue: false
-        input name: "initUnknown", type: "bool", title: "Set attributes to 'unknown' on initialize", defaultValue: true
-    }
+    input "ipAddress",   "text", title: "IP address of P1 Meter", required: true
+    input "bearerToken", "text", title: "API v2 Bearer Token (or leave blank to use stored token)", required: false
+    input "tokenName",   "text", title: "Token name (used when requesting a token)", defaultValue: "local/hubitat"
+    input name: "logEnable",    type: "bool", title: "Enable debug logging",                      defaultValue: false
+    input name: "threephase",   type: "bool", title: "Enable 3-phase attributes",                 defaultValue: false
+    input name: "gas",          type: "bool", title: "Track gas usage",                           defaultValue: true
+    input name: "water",        type: "bool", title: "Track water usage",                         defaultValue: false
+    input name: "belgianRate",  type: "bool", title: "Track Belgian capacity-rate (15-min peak)", defaultValue: false
+    input name: "pollInterval", type: "enum", title: "Poll interval",
+          options: ["1","5","10","15","30","60","180"], required: true,                            defaultValue: "60"
+    input name: "enablePoll",   type: "bool", title: "Enable scheduled polling",                  defaultValue: false
+    input name: "initUnknown",  type: "bool", title: "Set attributes to 'unknown' on initialize", defaultValue: true
 }
 
-// ── Logging helper ─────────────────────────────────────────────────────────────
+// ── Logging helper ──────────────────────────────────────────────────────────────
 
 private void logDebug(msg) {
     if (logEnable) log.debug(msg)
 }
 
-// ── Lifecycle ──────────────────────────────────────────────────────────────────
+// ── Token helper ────────────────────────────────────────────────────────────────
+//
+// state.apiToken is the authoritative store for the token.
+// The bearerToken preference is a manual-entry override only.
+// We never rely on device.updateSetting() to persist the token because
+// Hubitat does not reliably persist state or settings writes that happen
+// inside httpGet/httpPost closures.
+// requestToken() captures the token to a local variable inside the closure,
+// then writes it to state[] after the closure returns.
+
+private String getToken() {
+    def pref = settings?.bearerToken?.trim()
+    if (pref) return pref
+    return state?.apiToken ?: ""
+}
+
+// ── Lifecycle ───────────────────────────────────────────────────────────────────
 
 def updated() {
     log.info "updated() – re-initialising driver"
+    // If user manually entered a token in preferences, save it to state now
+    // (we are outside any closure here so state writes are reliable)
+    def pref = settings?.bearerToken?.trim()
+    if (pref) {
+        state.apiToken = pref
+        log.info "Bearer token from preferences saved to device state."
+    }
     initialize()
 }
 
@@ -150,8 +150,9 @@ def initialize() {
          "firmware_version","timestamp","tariff",
          "energy_import_kwh","energy_import_t1_kwh","energy_import_t2_kwh",
          "energy_export_kwh","energy_export_t1_kwh","energy_export_t2_kwh",
-         "power","power_l1_w",
-         "current_a","frequency_hz"].each { sendEvent(name: it, value: "unknown") }
+         "power","power_l1_w","current_a","frequency_hz"].each {
+            sendEvent(name: it, value: "unknown")
+        }
     }
 
     if (!gas)   { sendEvent(name: "gas_m3",   value: 0) }
@@ -166,7 +167,7 @@ def initialize() {
     refresh()
 }
 
-// ── Token acquisition ──────────────────────────────────────────────────────────
+// ── Token acquisition ───────────────────────────────────────────────────────────
 
 def requestToken() {
     if (!ipAddress) { log.error "IP address not configured"; return }
@@ -174,173 +175,237 @@ def requestToken() {
     def name = tokenName ?: "local/hubitat"
     def body = groovy.json.JsonOutput.toJson([name: name])
 
-    try {
-        def (status, data) = tlsPost("https://${ipAddress}/api/user", body)
-        logDebug("requestToken() HTTP ${status}: ${data}")
+    def params = [
+        uri             : "https://${ipAddress}",
+        path            : "/api/user",
+        ignoreSSLIssues : true,
+        headers         : [
+            "Content-Type" : "application/json",
+            "X-Api-Version": "2"
+        ],
+        body            : body,
+        timeout         : 10
+    ]
 
-        if (status == 200 && data?.token) {
-            device.updateSetting("bearerToken", [value: data.token, type: "text"])
-            sendEvent(name: "commStatus", value: "token-ok")
-            log.info "Token acquired successfully for user '${name}'."
-        } else if (status == 403) {
+    // Capture the token into a local variable inside the closure.
+    // We then write it to state[] AFTER the closure returns, because
+    // Hubitat does not reliably persist state writes made inside closures.
+    def receivedToken = null
+    def responseStatus = null
+
+    try {
+        httpPost(params) { resp ->
+            responseStatus = resp.status
+            logDebug("requestToken() HTTP ${resp.status}: ${resp.data}")
+            if (resp.status == 200 && resp.data?.token) {
+                receivedToken = resp.data.token as String
+            }
+        }
+    } catch (groovyx.net.http.HttpResponseException e) {
+        if (e.statusCode == 403) {
             log.warn "Press the button on the P1 Meter within 30 s, then run 'Request Token' again."
             sendEvent(name: "commStatus", value: "press-button")
-        } else if (status == -1) {
-            log.error "Connection failed – check IP address and confirm firmware is v6.x or higher (required for API v2)."
-            sendEvent(name: "commStatus", value: "connection-refused")
         } else {
-            log.warn "Unexpected response ${status}: ${data}"
+            log.error "requestToken() HTTP error ${e.statusCode}: ${e.message}"
+            sendEvent(name: "commStatus", value: "error")
         }
+        return
     } catch (Exception e) {
         log.error "requestToken() failed: ${e.message}"
-        sendEvent(name: "commStatus", value: "error")
+        sendEvent(name: "commStatus", value: "connection-refused")
+        return
+    }
+
+    // Write to state here — outside the closure — where it is reliably persisted
+    if (receivedToken) {
+        state.apiToken = receivedToken
+        sendEvent(name: "commStatus", value: "token-ok")
+        log.info "Token acquired and saved to device state for user '${name}'. State: ${state.apiToken?.size()} chars"
+    } else {
+        log.warn "Token request returned status ${responseStatus} but no token in response."
     }
 }
 
-// ── Refresh / polling ──────────────────────────────────────────────────────────
+// ── Refresh / polling ───────────────────────────────────────────────────────────
 
 def refresh() {
     if (!ipAddress) { log.error "IP address not configured"; return }
-    if (!bearerToken) { log.warn "No bearer token – run 'Request Token' first"; return }
+
+    def token = getToken()
+    if (!token) {
+        log.warn "No bearer token found – run 'Request Token' first"
+        sendEvent(name: "commStatus", value: "no-token")
+        return
+    }
+
+    def params = [
+        uri             : "https://${ipAddress}",
+        path            : "/api/measurement",
+        ignoreSSLIssues : true,
+        headers         : [
+            "Authorization": "Bearer ${token}",
+            "X-Api-Version": "2"
+        ],
+        timeout         : 10
+    ]
+
+    def pollOk = false
 
     try {
-        def (status, res) = tlsGet("https://${ipAddress}/api/measurement")
+        httpGet(params) { resp ->
+            if (resp.status != 200 || resp.data == null) {
+                log.warn "Unexpected response ${resp.status} from /api/measurement"
+                sendEvent(name: "commStatus", value: "error")
+                return
+            }
 
-        if (status == 401) {
-            log.error "Unauthorized – token may be invalid. Run 'Request Token' again."
-            sendEvent(name: "commStatus", value: "unauthorized")
-            return
-        }
-        if (status != 200 || res == null) {
-            log.warn "Unexpected response ${status} from /api/measurement"
-            sendEvent(name: "commStatus", value: "error")
-            return
-        }
+            def res = resp.data
+            pollOk = true
 
-        sendEvent(name: "commStatus", value: "good")
+            // ── Meta ─────────────────────────────────────────────────────────
+            sendIfPresent(res, "meter_model",      "meter_model",      "string")
+            sendIfPresent(res, "protocol_version", "protocol_version", "number")
+            sendIfPresent(res, "unique_id",        "unique_id",        "string")
+            sendIfPresent(res, "timestamp",        "timestamp",        "string")
+            sendIfPresent(res, "tariff",           "tariff",           "number")
 
-        // ── Meta ──────────────────────────────────────────────────────────────
-        sendIfPresent(res, "meter_model",      "meter_model",      "string")
-        sendIfPresent(res, "protocol_version", "protocol_version", "number")
-        sendIfPresent(res, "unique_id",        "unique_id",        "string")
-        sendIfPresent(res, "timestamp",        "timestamp",        "string")
-        sendIfPresent(res, "tariff",           "tariff",           "number")
+            // ── Energy import ─────────────────────────────────────────────────
+            sendIfPresent(res, "energy_import_kwh",    "energy_import_kwh",    "number", "kWh")
+            sendIfPresent(res, "energy_import_t1_kwh", "energy_import_t1_kwh", "number", "kWh")
+            sendIfPresent(res, "energy_import_t2_kwh", "energy_import_t2_kwh", "number", "kWh")
 
-        // ── Energy import ─────────────────────────────────────────────────────
-        sendIfPresent(res, "energy_import_kwh",    "energy_import_kwh",    "number", "kWh")
-        sendIfPresent(res, "energy_import_t1_kwh", "energy_import_t1_kwh", "number", "kWh")
-        sendIfPresent(res, "energy_import_t2_kwh", "energy_import_t2_kwh", "number", "kWh")
+            // ── Energy export ─────────────────────────────────────────────────
+            sendIfPresent(res, "energy_export_kwh",    "energy_export_kwh",    "number", "kWh")
+            sendIfPresent(res, "energy_export_t1_kwh", "energy_export_t1_kwh", "number", "kWh")
+            sendIfPresent(res, "energy_export_t2_kwh", "energy_export_t2_kwh", "number", "kWh")
 
-        // ── Energy export ─────────────────────────────────────────────────────
-        sendIfPresent(res, "energy_export_kwh",    "energy_export_kwh",    "number", "kWh")
-        sendIfPresent(res, "energy_export_t1_kwh", "energy_export_t1_kwh", "number", "kWh")
-        sendIfPresent(res, "energy_export_t2_kwh", "energy_export_t2_kwh", "number", "kWh")
+            // ── Active power ──────────────────────────────────────────────────
+            if (res?.power_w != null) {
+                sendEvent(name: "power", value: res.power_w.toInteger(), unit: "W")
+            }
+            sendIfPresent(res, "power_l1_w", "power_l1_w", "number", "W")
+            if (threephase) {
+                sendIfPresent(res, "power_l2_w", "power_l2_w", "number", "W")
+                sendIfPresent(res, "power_l3_w", "power_l3_w", "number", "W")
+            }
 
-        // ── Active power ──────────────────────────────────────────────────────
-        // "power" satisfies the PowerMeter capability
-        if (res?.power_w != null) {
-            sendEvent(name: "power", value: res.power_w.toInteger(), unit: "W")
-        }
-        sendIfPresent(res, "power_l1_w", "power_l1_w", "number", "W")
+            // ── Voltage ───────────────────────────────────────────────────────
+            if (threephase) {
+                sendIfPresent(res, "voltage_l1_v", "voltage_l1_v", "number", "V")
+                sendIfPresent(res, "voltage_l2_v", "voltage_l2_v", "number", "V")
+                sendIfPresent(res, "voltage_l3_v", "voltage_l3_v", "number", "V")
+            } else {
+                def v = res?.voltage_l1_v ?: res?.voltage_v
+                if (v != null) sendEvent(name: "voltage_l1_v", value: v.toFloat(), unit: "V")
+            }
 
-        if (threephase) {
-            sendIfPresent(res, "power_l2_w", "power_l2_w", "number", "W")
-            sendIfPresent(res, "power_l3_w", "power_l3_w", "number", "W")
-        }
+            // ── Current ───────────────────────────────────────────────────────
+            sendIfPresent(res, "current_a",    "current_a",    "number", "A")
+            sendIfPresent(res, "current_l1_a", "current_l1_a", "number", "A")
+            if (threephase) {
+                sendIfPresent(res, "current_l2_a", "current_l2_a", "number", "A")
+                sendIfPresent(res, "current_l3_a", "current_l3_a", "number", "A")
+            }
 
-        // ── Voltage ───────────────────────────────────────────────────────────
-        if (threephase) {
-            sendIfPresent(res, "voltage_l1_v", "voltage_l1_v", "number", "V")
-            sendIfPresent(res, "voltage_l2_v", "voltage_l2_v", "number", "V")
-            sendIfPresent(res, "voltage_l3_v", "voltage_l3_v", "number", "V")
-        } else {
-            // single-phase meters may expose voltage_l1_v or a top-level voltage_v
-            def v = res?.voltage_l1_v ?: res?.voltage_v
-            if (v != null) sendEvent(name: "voltage_l1_v", value: v.toFloat(), unit: "V")
-        }
+            // ── Frequency ─────────────────────────────────────────────────────
+            sendIfPresent(res, "frequency_hz", "frequency_hz", "number", "Hz")
 
-        // ── Current ───────────────────────────────────────────────────────────
-        sendIfPresent(res, "current_a",   "current_a",   "number", "A")
-        sendIfPresent(res, "current_l1_a","current_l1_a","number", "A")
-        if (threephase) {
-            sendIfPresent(res, "current_l2_a","current_l2_a","number", "A")
-            sendIfPresent(res, "current_l3_a","current_l3_a","number", "A")
-        }
+            // ── Power-quality counters ────────────────────────────────────────
+            ["voltage_sag_l1_count","voltage_sag_l2_count","voltage_sag_l3_count",
+             "voltage_swell_l1_count","voltage_swell_l2_count","voltage_swell_l3_count",
+             "any_power_fail_count","long_power_fail_count"].each { key ->
+                sendIfPresent(res, key, key, "number")
+            }
 
-        // ── Frequency ─────────────────────────────────────────────────────────
-        sendIfPresent(res, "frequency_hz", "frequency_hz", "number", "Hz")
+            // ── Belgian capacity-rate fields ──────────────────────────────────
+            if (belgianRate) {
+                sendIfPresent(res, "average_power_15m_w",         "average_power_15m_w",         "number", "W")
+                sendIfPresent(res, "monthly_power_peak_w",         "monthly_power_peak_w",         "number", "W")
+                sendIfPresent(res, "monthly_power_peak_timestamp", "monthly_power_peak_timestamp", "string")
+            }
 
-        // ── Power-quality counters ────────────────────────────────────────────
-        ["voltage_sag_l1_count","voltage_sag_l2_count","voltage_sag_l3_count",
-         "voltage_swell_l1_count","voltage_swell_l2_count","voltage_swell_l3_count",
-         "any_power_fail_count","long_power_fail_count"].each { key ->
-            sendIfPresent(res, key, key, "number")
-        }
-
-        // ── Belgian capacity-rate fields ──────────────────────────────────────
-        if (belgianRate) {
-            sendIfPresent(res, "average_power_15m_w",         "average_power_15m_w",         "number", "W")
-            sendIfPresent(res, "monthly_power_peak_w",         "monthly_power_peak_w",         "number", "W")
-            sendIfPresent(res, "monthly_power_peak_timestamp", "monthly_power_peak_timestamp", "string")
-        }
-
-        // ── External utility meters (gas, water, heat, …) ────────────────────
-        if (res?.external) {
-            res.external.each { ext ->
-                switch (ext.type) {
-                    case "gas_meter":
-                        if (gas) {
-                            sendEvent(name: "gas_m3",        value: ext.value.toFloat(), unit: "m3")
-                            sendEvent(name: "gas_timestamp", value: ext.timestamp.toString())
-                        }
-                        break
-                    case "water_meter":
-                        if (water) {
-                            sendEvent(name: "water_m3",        value: ext.value.toFloat(), unit: "m3")
-                            sendEvent(name: "water_timestamp", value: ext.timestamp.toString())
-                        }
-                        break
-                    default:
-                        logDebug("Unhandled external device type: ${ext.type}")
+            // ── External utility meters ───────────────────────────────────────
+            if (res?.external) {
+                res.external.each { ext ->
+                    switch (ext.type) {
+                        case "gas_meter":
+                            if (gas) {
+                                sendEvent(name: "gas_m3",        value: ext.value.toFloat(), unit: "m3")
+                                sendEvent(name: "gas_timestamp", value: ext.timestamp.toString())
+                            }
+                            break
+                        case "water_meter":
+                            if (water) {
+                                sendEvent(name: "water_m3",        value: ext.value.toFloat(), unit: "m3")
+                                sendEvent(name: "water_timestamp", value: ext.timestamp.toString())
+                            }
+                            break
+                        default:
+                            logDebug("Unhandled external device type: ${ext.type}")
+                    }
                 }
             }
         }
-
-        // ── System info (from /api endpoint) ─────────────────────────────────
-        fetchSystemInfo()
-
-        // ── Schedule next poll ────────────────────────────────────────────────
-        schedulePoll()
-
+    } catch (groovyx.net.http.HttpResponseException e) {
+        if (e.statusCode == 401) {
+            log.error "Unauthorized – token may be invalid. Run 'Request Token' again."
+            sendEvent(name: "commStatus", value: "unauthorized")
+        } else {
+            log.warn "refresh() HTTP error ${e.statusCode}: ${e.message}"
+            sendEvent(name: "commStatus", value: "error")
+        }
+        return
     } catch (Exception e) {
-        logDebug("refresh() failed: ${e.message}")
         log.warn "refresh() failed – check IP / token. Error: ${e.message}"
         sendEvent(name: "commStatus", value: "error")
+        return
+    }
+
+    // Only update commStatus and continue if the poll actually succeeded
+    if (pollOk) {
+        sendEvent(name: "commStatus", value: "good")
+        fetchSystemInfo()
+        schedulePoll()
     }
 }
 
-// ── Fetch device info (wifi SSID, firmware, etc.) ─────────────────────────────
+// ── Fetch device info (firmware, wifi SSID) ─────────────────────────────────────
 
 private void fetchSystemInfo() {
+    def token = getToken()
+    def base = [
+        uri             : "https://${ipAddress}",
+        ignoreSSLIssues : true,
+        headers         : [
+            "Authorization": "Bearer ${token}",
+            "X-Api-Version": "2"
+        ],
+        timeout         : 10
+    ]
+
     try {
-        def (s1, info) = tlsGet("https://${ipAddress}/api")
-        if (info?.firmware_version) sendEvent(name: "firmware_version", value: info.firmware_version.toString())
+        httpGet(base + [path: "/api"]) { resp ->
+            if (resp.data?.firmware_version) {
+                sendEvent(name: "firmware_version", value: resp.data.firmware_version.toString())
+            }
+        }
     } catch (Exception e) {
         logDebug("fetchSystemInfo(/api) failed: ${e.message}")
     }
 
     try {
-        def (s2, sys) = tlsGet("https://${ipAddress}/api/system")
-        if (sys) {
-            if (sys.wifi_ssid)         sendEvent(name: "wifi_ssid",    value: sys.wifi_ssid.toString())
-            if (sys.wifi_rssi_db != null) sendEvent(name: "wifi_rssi_db", value: sys.wifi_rssi_db.toInteger(), unit: "dBm")
+        httpGet(base + [path: "/api/system"]) { resp ->
+            if (resp.data) {
+                if (resp.data.wifi_ssid)            sendEvent(name: "wifi_ssid",    value: resp.data.wifi_ssid.toString())
+                if (resp.data.wifi_rssi_db != null) sendEvent(name: "wifi_rssi_db", value: resp.data.wifi_rssi_db.toInteger(), unit: "dBm")
+            }
         }
     } catch (Exception e) {
         logDebug("fetchSystemInfo(/api/system) failed: ${e.message}")
     }
 }
 
-// ── Scheduling ─────────────────────────────────────────────────────────────────
+// ── Scheduling ──────────────────────────────────────────────────────────────────
 
 private void schedulePoll() {
     if (!enablePoll) return
@@ -349,91 +414,21 @@ private void schedulePoll() {
     Integer interval = Integer.parseInt(settings.pollInterval ?: "60")
 
     switch (interval) {
-        case 1:   runEvery1Minute(refresh);  break
-        case 5:   runEvery5Minutes(refresh); break
-        case 10:  runEvery10Minutes(refresh);break
-        case 15:  runEvery15Minutes(refresh);break
-        case 30:  runEvery30Minutes(refresh);break
-        case 60:  runEvery1Hour(refresh);    break
-        case 180: runEvery3Hours(refresh);   break
+        case 1:   runEvery1Minute(refresh);   break
+        case 5:   runEvery5Minutes(refresh);  break
+        case 10:  runEvery10Minutes(refresh); break
+        case 15:  runEvery15Minutes(refresh); break
+        case 30:  runEvery30Minutes(refresh); break
+        case 60:  runEvery1Hour(refresh);     break
+        case 180: runEvery3Hours(refresh);    break
         default:  runIn(interval * 60, refresh); break
     }
     logDebug("Polling scheduled every ${interval} minute(s)")
 }
 
-// ── Low-level HTTPS helpers (bypass JVM trust store) ──────────────────────────
-//
-// Hubitat's httpGet/httpPost honour ignoreSSLIssues for cert validation but
-// the JVM may still refuse to complete a TLS handshake with the P1 Meter's
-// self-signed certificate before the HTTP layer is reached, causing
-// "Connection refused" or "PKIX path building failed" errors.
-// Using HttpsURLConnection with a trust-all SSLContext avoids this entirely.
+// ── Convenience: only send event when data key exists ──────────────────────────
 
-@groovy.transform.CompileStatic(groovy.transform.TypeCheckingMode.SKIP)
-private List tlsGet(String url) {
-    return tlsRequest("GET", url, null)
-}
-
-@groovy.transform.CompileStatic(groovy.transform.TypeCheckingMode.SKIP)
-private List tlsPost(String url, String body) {
-    return tlsRequest("POST", url, body)
-}
-
-@groovy.transform.CompileStatic(groovy.transform.TypeCheckingMode.SKIP)
-private List tlsRequest(String method, String url, String body) {
-    // Build a trust-all SSL context
-    def trustAll = [
-        checkClientTrusted: { chain, authType -> },
-        checkServerTrusted: { chain, authType -> },
-        getAcceptedIssuers: { -> new java.security.cert.X509Certificate[0] }
-    ] as javax.net.ssl.X509TrustManager
-
-    def sc = javax.net.ssl.SSLContext.getInstance("TLS")
-    sc.init(null, [trustAll] as javax.net.ssl.TrustManager[], new java.security.SecureRandom())
-
-    def conn
-    try {
-        conn = new URL(url).openConnection() as javax.net.ssl.HttpsURLConnection
-        conn.setSSLSocketFactory(sc.socketFactory)
-        conn.setHostnameVerifier({ hostname, session -> true } as javax.net.ssl.HostnameVerifier)
-        conn.setRequestMethod(method)
-        conn.setConnectTimeout(10000)
-        conn.setReadTimeout(10000)
-        conn.setRequestProperty("Authorization", "Bearer ${bearerToken}")
-        conn.setRequestProperty("X-Api-Version", "2")
-        conn.setRequestProperty("Content-Type", "application/json")
-
-        if (body != null) {
-            conn.setDoOutput(true)
-            conn.outputStream.withWriter("UTF-8") { it.write(body) }
-        }
-
-        int status = conn.responseCode
-        def stream  = (status >= 200 && status < 300) ? conn.inputStream : conn.errorStream
-        def text    = stream?.getText("UTF-8") ?: ""
-        logDebug("${method} ${url} → ${status}  body=${text}")
-
-        def parsed = null
-        if (text) {
-            try { parsed = new groovy.json.JsonSlurper().parseText(text) }
-            catch (Exception je) { logDebug("JSON parse failed: ${je.message}") }
-        }
-        return [status, parsed]
-
-    } catch (java.net.ConnectException e) {
-        log.error "Cannot connect to ${url} – is firmware ≥ 6.x installed? (${e.message})"
-        return [-1, null]
-    } catch (Exception e) {
-        log.error "tlsRequest(${method} ${url}) failed: ${e.message}"
-        return [-1, null]
-    } finally {
-        conn?.disconnect()
-    }
-}
-
-// ── Convenience: only send event when data key exists ─────────────────────────
-
-private void sendIfPresent(Map res, String dataKey, String attrName, String type, String unit = null) {
+private void sendIfPresent(res, String dataKey, String attrName, String type, String unit = null) {
     def val = res?."${dataKey}"
     if (val == null) return
     def ev = [name: attrName]
